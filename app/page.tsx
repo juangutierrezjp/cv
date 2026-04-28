@@ -35,24 +35,16 @@ function AuroraBackground() {
 
 function SaltaDevBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M8 1.5L13.5 4.5V11.5L8 14.5L2.5 11.5V4.5L8 1.5Z"
-          fill="rgba(139,92,246,0.20)"
-          stroke="rgba(139,92,246,0.60)"
-          strokeWidth="1"
-        />
-        <path
-          d="M5.5 8L7 9.5L10.5 6"
-          stroke="rgba(167,139,250,0.95)"
-          strokeWidth="1.3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="text-violet-400/80 font-medium">Salta Dev</span>
-    </span>
+    <a
+      href="https://www.instagram.com/juanpa.soy/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 text-violet-400/80 hover:text-violet-300 transition-colors duration-200"
+    >
+<img src="/logo.png" alt="logo" className="w-4 h-4" />
+      <span className="font-medium">Salta Dev</span>
+        <span className="ml-1 text-white/70">por Juan Guzmán</span>
+    </a>
   )
 }
 
@@ -415,35 +407,12 @@ export default function CVGenerator() {
 
       <div className="relative z-10 min-h-screen flex flex-col">
 
-        {/* ── Navbar ── */}
-        <nav className="flex items-center justify-between px-6 py-4 border-b border-white/[0.055]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.7)]" />
-            <span className="text-white font-semibold tracking-tight text-sm select-none">
-              Mejorar<span className="text-blue-400">.</span>cv
-            </span>
-          </div>
-          <a
-            href="https://www.instagram.com/juanpa.soy/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-white/35 hover:text-white/65 transition-colors duration-200 text-xs"
-          >
-            <span>por Juan Guzmán</span>
-            <div className="w-3.5 h-3.5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-              <svg width="8" height="6" viewBox="0 0 10 8" fill="none">
-                <path d="M8.5 1L3.5 6L1.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </a>
-        </nav>
+
 
         {/* ── Hero ── */}
         <header className="text-center pt-12 pb-8 px-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.045] border border-white/[0.08] text-[11px] text-white/50 mb-8">
             <SaltaDevBadge />
-            <span className="mx-1 text-white/20">·</span>
-            <span>Desarrollado por Juan Guzmán</span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-[3.75rem] font-bold tracking-tight leading-[1.1] mb-4 bg-gradient-to-br from-white via-white/95 to-blue-200/55 bg-clip-text text-transparent">
             Generador de CV<br className="hidden sm:block" /> y Ruta Laboral
