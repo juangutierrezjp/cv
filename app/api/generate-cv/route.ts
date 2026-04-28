@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-// API key de Gemini
-const GEMINI_API_KEY = "AIzaSyC_MDBbQzne6IndYuvzrPR6-6ASkGK-cqQ"
+// API key de OpenRouter
+const OPENROUTER_API_KEY = "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"
 
 // Función para limpiar la respuesta del modelo
 function cleanMarkdownResponse(text: string): string {
@@ -23,45 +23,47 @@ function cleanMarkdownResponse(text: string): string {
   return cleaned.trim()
 }
 
-// Función para llamar a Gemini 2.5 Flash directamente
-async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.3,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
+// Función para llamar a OpenRouter (compatible con OpenAI API)
+async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise<string> {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://mejorar.cv", // Tu dominio
+      "X-Title": "Mejorar CV Generator" // Nombre de tu app
+    },
+    body: JSON.stringify({
+      model: "openrouter/free", // Free Models Router - elige automáticamente el mejor modelo gratuito
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
         },
-      }),
-    }
-  )
+        {
+          role: "user", 
+          content: userPrompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 8192,
+      stream: false
+    })
+  })
 
   if (!response.ok) {
     const errorData = await response.text()
-    console.error("Gemini API error:", errorData)
-    throw new Error(`Gemini API error: ${response.status}`)
+    console.error("OpenRouter API error:", errorData)
+    throw new Error(`OpenRouter API error: ${response.status}`)
   }
 
   const data = await response.json()
   
-  if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-    throw new Error("Invalid response from Gemini")
+  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    throw new Error("Invalid response from OpenRouter")
   }
 
-  return data.candidates[0].content.parts[0].text
+  return data.choices[0].message.content
 }
 
 export async function POST(req: NextRequest) {
@@ -139,7 +141,7 @@ IMPORTANTE: Responde SOLO con la ruta de búsqueda laboral completa en Markdown.
 
 ${userInfo}`
 
-      const text = await callGemini(systemPrompt, prompt)
+      const text = await callOpenRouter(systemPrompt, prompt)
       const cleanedRoadmap = cleanMarkdownResponse(text)
       return NextResponse.json({ success: true, roadmap: cleanedRoadmap })
 
@@ -201,12 +203,12 @@ ${userInfo}`
           return NextResponse.json({ success: false, error: "Tipo de prompt inválido" }, { status: 400 })
       }
 
-      const text = await callGemini(systemPrompt, prompt)
+      const text = await callOpenRouter(systemPrompt, prompt)
       const cleanedCV = cleanMarkdownResponse(text)
       return NextResponse.json({ success: true, cv: cleanedCV })
     }
   } catch (err: any) {
-    console.error("Gemini error:", err.message || err)
+    console.error("OpenRouter error:", err.message || err)
     return NextResponse.json({ success: false, error: "Error interno al generar el contenido" }, { status: 500 })
   }
 }
