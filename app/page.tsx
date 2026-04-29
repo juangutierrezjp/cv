@@ -196,6 +196,7 @@ export default function CVGenerator() {
   const [skills, setSkills]                       = useState("")
   const [cvContent, setCvContent]                 = useState("")
   const [roadmapContent, setRoadmapContent]       = useState("")
+  const [roadmapHtml, setRoadmapHtml]             = useState("")
   const [cvStatus, setCvStatus]                   = useState<FileStatus>("idle")
   const [roadmapStatus, setRoadmapStatus]         = useState<FileStatus>("idle")
   const [formError, setFormError]                 = useState("")
@@ -220,7 +221,7 @@ export default function CVGenerator() {
     return cv
   }
 
-  async function fetchRoadmap(): Promise<string> {
+  async function fetchRoadmap(): Promise<{ roadmap: string; html: string }> {
     const res = await fetch("/api/generate-cv", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -233,8 +234,8 @@ export default function CVGenerator() {
       const { error } = await res.json()
       throw new Error(error)
     }
-    const { roadmap } = await res.json()
-    return roadmap
+    const data = await res.json()
+    return { roadmap: data.roadmap, html: data.html }
   }
 
   // ─── Generation flow ──────────────────────────────────────────────────────
@@ -242,6 +243,7 @@ export default function CVGenerator() {
   async function runGeneration() {
     setCvContent("")
     setRoadmapContent("")
+    setRoadmapHtml("")
     setCvStatus("loading")
     setRoadmapStatus("idle")
 
@@ -259,8 +261,9 @@ export default function CVGenerator() {
 
     setRoadmapStatus("loading")
     try {
-      const roadmap = await fetchRoadmap()
-      setRoadmapContent(roadmap)
+      const result = await fetchRoadmap()
+      setRoadmapContent(result.roadmap)
+      setRoadmapHtml(result.html)
       setRoadmapStatus("done")
       toast({ title: "¡Todo listo!", description: "Tus archivos están listos para descargar." })
     } catch (err) {
@@ -275,13 +278,15 @@ export default function CVGenerator() {
     setCvContent("")
     setRoadmapStatus("idle")
     setRoadmapContent("")
+    setRoadmapHtml("")
     try {
       const cv = await fetchCV()
       setCvContent(cv)
       setCvStatus("done")
       setRoadmapStatus("loading")
-      const roadmap = await fetchRoadmap()
-      setRoadmapContent(roadmap)
+      const result = await fetchRoadmap()
+      setRoadmapContent(result.roadmap)
+      setRoadmapHtml(result.html)
       setRoadmapStatus("done")
       toast({ title: "¡Todo listo!", description: "Tus archivos están listos para descargar." })
     } catch (err) {
@@ -293,9 +298,11 @@ export default function CVGenerator() {
   async function retryRoadmap() {
     setRoadmapStatus("loading")
     setRoadmapContent("")
+    setRoadmapHtml("")
     try {
-      const roadmap = await fetchRoadmap()
-      setRoadmapContent(roadmap)
+      const result = await fetchRoadmap()
+      setRoadmapContent(result.roadmap)
+      setRoadmapHtml(result.html)
       setRoadmapStatus("done")
       toast({ title: "¡Ruta generada!", description: "Tu hoja de ruta está lista." })
     } catch (err) {
@@ -394,6 +401,20 @@ export default function CVGenerator() {
     })
 
     pdf.save(fileName)
+  }
+
+  // Función para descargar HTML visual
+  async function downloadHTML(htmlContent: string, fileName: string) {
+    if (!htmlContent) return
+    const blob = new Blob([htmlContent], { type: "text/html" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   // ─── JSX ──────────────────────────────────────────────────────────────────
@@ -591,13 +612,23 @@ export default function CVGenerator() {
                   onRetry={retryCV}
                 />
 
-                {/* Tarjeta Ruta Laboral */}
+                {/* Tarjeta Ruta Laboral PDF */}
                 <FileCard
                   icon={MapPin}
                   title="Ruta de Búsqueda Laboral"
                   description={cvStatus !== "done" ? "Se genera automáticamente una vez que el CV está listo" : "Plan de acción personalizado de 12 semanas"}
                   status={roadmapStatus}
                   onDownload={() => downloadPDF(roadmapContent, `Ruta_Laboral_${personalInfo.name.replace(/\s+/g, "_")}.pdf`)}
+                  onRetry={retryRoadmap}
+                />
+
+                {/* Tarjeta Ruta Laboral HTML Visual */}
+                <FileCard
+                  icon={Sparkles}
+                  title="Ruta Visual (HTML)"
+                  description="Versión visual interactiva para entender mejor tu búsqueda"
+                  status={roadmapStatus}
+                  onDownload={() => downloadHTML(roadmapHtml, `Ruta_Laboral_${personalInfo.name.replace(/\s+/g, "_")}.html`)}
                   onRetry={retryRoadmap}
                 />
 
